@@ -2,74 +2,79 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Video Interactivo - Biblioteca</title>
+  <title>Video Interactivo - Biblioteca YouTube</title>
   <style>
-    html, body {
+    body {
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: #eee;
       margin: 0;
       padding: 0;
-      height: 100%;
-      background: #1a1a1a;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden;
+      text-align: center;
+      overflow-x: hidden;
     }
-  
-    video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+    #player {
+      width: 100%;
+      max-width: 800px;
+      height: 450px;
+      margin: 20px auto;
+      position: relative;
       z-index: 1;
     }
-  
-    #buttons {
+    #overlay {
       position: absolute;
-      top: 10%;
-      left: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 10;
-    }
-  
-    .btn {
-      display: none;
-      padding: 12px 24px;
-      font-size: 1rem;
-      background-color: #6e4c3b;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: left;
-    }
-  
-    .btn:hover {
-      background-color: #8a6451;
-      box-shadow: 0 6px 10px rgba(0,0,0,0.15);
-      transform: translateY(-2px);
-    }
-  
-    #overlayText {
-      position: absolute;
-      top: 50%;
+      top: 20px;
       left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 48px;
-      color: red;
-      font-weight: bold;
+      transform: translateX(-50%);
+      max-width: 780px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      display: none;
+      z-index: 10;
+      text-align: left;
+      font-size: 18px;
+      box-shadow: 0 0 15px #000;
+    }
+    #buttons {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn {
+      background: #5cb85c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      flex: 1 1 auto;
+      min-width: 100px;
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+      background: #4cae4c;
+    }
+    #gameOver {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      padding: 30px 40px;
+      border-radius: 10px;
+      color: white;
+      font-size: 22px;
       display: none;
       z-index: 20;
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 20px;
-      border-radius: 10px;
+      max-width: 600px;
+      box-shadow: 0 0 15px black;
     }
-  
-    h1 {
-      display: none; /* ocultamos el título para modo pantalla completa */
+    #gameOver button {
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -77,218 +82,173 @@
 
   <h1>Video Interactivo - Biblioteca</h1>
 
-  <div id="videoContainer">
-    <video id="video" controls poster="portada.png">
-        <source src="video_completo.mp4" type="video/mp4" />
-      Tu navegador no soporta la etiqueta de video.
-    </video>
+  <div id="player"></div>
 
-    <div id="overlayText">GAME OVER</div>
+  <div id="overlay">
+    <div id="overlayText"></div>
+    <div id="buttons"></div>
+  </div>
 
-    <div id="buttons">
-      <button id="option1" class="btn">SI</button>
-      <button id="option2" class="btn">NO</button>
-      <button id="option3" class="btn">Reintentar</button>
-
-      <!-- Primera sala -->
-      <button id="startInfantil" class="btn">Ir a Sala Infantil</button>
-      <button id="startComputadores" class="btn">Ir a Sala de Computadores</button>
-      <button id="startGeneral" class="btn">Ir a Sala General</button>
-      <button id="startExposiciones" class="btn">Ir a Sala de Exposiciones</button>
-
-      <!-- Opciones posteriores -->
-      <button id="btnInfantil" class="btn">Sala Infantil</button>
-      <button id="btnComputadores" class="btn">Sala de Computadores</button>
-      <button id="btnGeneral" class="btn">Sala General</button>
-      <button id="btnExposiciones" class="btn">Sala de Exposiciones</button>
-      <button id="btnSalir" class="btn">Salir de la Biblioteca</button>
-    </div>
+  <div id="gameOver">
+    <div>Game Over. No ingresaste a la biblioteca.</div>
+    <button class="btn" onclick="reiniciar()">Reintentar</button>
   </div>
 
   <script>
-    const video = document.getElementById('video');
-    const overlayText = document.getElementById('overlayText');
-    const buttons = document.getElementById('buttons');
+    let player;
+    let salioBiblioteca = false;
 
-    // Botones
-    const btn1 = document.getElementById('option1');
-    const btn2 = document.getElementById('option2');
-    const btn3 = document.getElementById('option3');
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.body.appendChild(tag);
 
-    const btnStartInfantil = document.getElementById('startInfantil');
-    const btnStartComputadores = document.getElementById('startComputadores');
-    const btnStartGeneral = document.getElementById('startGeneral');
-    const btnStartExposiciones = document.getElementById('startExposiciones');
-
-    const btnInfantil = document.getElementById('btnInfantil');
-    const btnComputadores = document.getElementById('btnComputadores');
-    const btnGeneral = document.getElementById('btnGeneral');
-    const btnExposiciones = document.getElementById('btnExposiciones');
-    const btnSalir = document.getElementById('btnSalir');
-
-    const tiemposPreguntas = {
+    const tiemposPreguntas = [33, 79, 80, 165, 205, 302, 372, 419];
+    const salaTiempos = {
       infantil: 80,
       computadores: 165,
       general: 206,
-      exposiciones: 302,
-      adicional: 372
+      exposiciones: 303,
+      salir: 375
     };
+    let preguntasHechas = new Set();
 
-    let visitadas = new Set();
-    let mostradasSalas = {
-      infantil: false,
-      computadores: false,
-      general: false,
-      exposiciones: false,
-      adicional: false
-    };
-
-    let mostradaPreguntaEntrada = false;
-    let mostradaPreguntaSalaInicial = false;
-    let gameOverMostrado = false;
-
-    function ocultarTodosBotones() {
-      document.querySelectorAll('.btn').forEach(btn => btn.style.display = 'none');
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '450',
+        width: '100%',
+        videoId: 'B46rutgOq7M',
+        playerVars: {
+          controls: 1,
+          rel: 0,
+          modestbranding: 1
+        },
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange
+        }
+      });
     }
 
-    function mostrarOpciones() {
-      ocultarTodosBotones();
-      btnInfantil.style.display = 'inline-block';
-      btnComputadores.style.display = 'inline-block';
-      btnGeneral.style.display = 'inline-block';
-      btnExposiciones.style.display = 'inline-block';
-      btnSalir.style.display = 'inline-block';
+    function onPlayerReady(event) {
+      // No hacer nada aún
     }
 
-    video.addEventListener('timeupdate', () => {
-      const current = video.currentTime;
+    let checkInterval;
 
-      if (!mostradaPreguntaEntrada && current >= 33 && current < 35) {
-        ocultarTodosBotones();
-        btn1.style.display = 'inline-block';
-        btn2.style.display = 'inline-block';
-        mostradaPreguntaEntrada = true;
-        video.pause();
+    function onPlayerStateChange(event) {
+      if(event.data === YT.PlayerState.PLAYING){
+        checkInterval = setInterval(checkTime, 300);
+      } else {
+        clearInterval(checkInterval);
+      }
+    }
+
+    function checkTime() {
+      const currentTime = player.getCurrentTime();
+
+      if (currentTime >= 411 && salioBiblioteca) {
+        player.pauseVideo();
+        hideOverlay();
+        return;
       }
 
-      if (!mostradaPreguntaSalaInicial && current >= 78 && current < 80) {
-        ocultarTodosBotones();
-        btnStartInfantil.style.display = 'inline-block';
-        btnStartComputadores.style.display = 'inline-block';
-        btnStartGeneral.style.display = 'inline-block';
-        btnStartExposiciones.style.display = 'inline-block';
-        btnSalir.style.display = 'inline-block';
-        mostradaPreguntaSalaInicial = true;
-        video.pause();
+      for(const tiempo of tiemposPreguntas){
+        if(Math.abs(currentTime - tiempo) < 0.5 && !preguntasHechas.has(tiempo)){
+          player.pauseVideo();
+          preguntasHechas.add(tiempo);
+          showQuestion(tiempo);
+          break;
+        }
       }
+    }
 
-      for (let sala in tiemposPreguntas) {
-        const tiempo = tiemposPreguntas[sala];
-        if (!mostradasSalas[sala] && Math.abs(current - tiempo) < 0.4) {
-          mostrarOpciones();
-          visitadas.add(sala);
-          mostradasSalas[sala] = true;
-          video.pause();
+    const overlay = document.getElementById('overlay');
+    const overlayText = document.getElementById('overlayText');
+    const buttonsDiv = document.getElementById('buttons');
+    const gameOverDiv = document.getElementById('gameOver');
+
+    function showQuestion(tiempo){
+      if (tiempo === 33) {
+        preguntaEntrada();
+      } else if (tiempo === 419) {
+        showGameOver();
+      } else {
+        preguntaSala();
+      }
+    }
+
+    function preguntaEntrada() {
+      overlayText.textContent = "¿Quieres entrar a la biblioteca?";
+      buttonsDiv.innerHTML = "";
+
+      addButton("Sí", () => {
+        hideOverlay();
+        player.seekTo(34, true);
+        player.playVideo();
+      });
+
+      addButton("No", () => {
+        hideOverlay();
+        player.seekTo(412, true);
+        player.playVideo();
+      });
+
+      overlay.style.display = 'block';
+    }
+
+    function preguntaSala() {
+      overlayText.textContent = "¿A qué sala quieres ir?";
+      buttonsDiv.innerHTML = "";
+
+      for (const sala in salaTiempos) {
+        if (sala === 'salir') {
+          addButton("Salir de la Biblioteca", () => {
+            salioBiblioteca = true;
+            hideOverlay();
+            player.seekTo(salaTiempos.salir, true);
+            player.playVideo();
+          });
+        } else {
+          addButton(capitalize(sala), () => {
+            hideOverlay();
+            player.seekTo(salaTiempos[sala], true);
+            player.playVideo();
+          });
         }
       }
 
-      if (!gameOverMostrado && current >= 420 && current < 422) {
-        overlayText.style.display = 'block';
-        btn3.style.display = 'inline-block';
-        video.pause();
-        gameOverMostrado = true;
-      }
+      overlay.style.display = 'block';
+    }
 
-      // Final forzado
-      if (current >= 411) {
-        video.pause();
-      }
-    });
+    function addButton(text, onClick){
+      const btn = document.createElement('button');
+      btn.textContent = text;
+      btn.className = 'btn';
+      btn.onclick = onClick;
+      buttonsDiv.appendChild(btn);
+    }
 
-    btn1.onclick = () => {
-      ocultarTodosBotones();
-      video.currentTime = 34;
-      video.play();
-    };
+    function hideOverlay(){
+      overlay.style.display = 'none';
+    }
 
-    btn2.onclick = () => {
-      ocultarTodosBotones();
-      video.currentTime = 412;
-      video.play();
-    };
+    function showGameOver(){
+      player.pauseVideo();
+      gameOverDiv.style.display = 'block';
+    }
 
-    btn3.onclick = () => {
-      overlayText.style.display = 'none';
-      visitadas.clear();
-      mostradaPreguntaEntrada = false;
-      mostradaPreguntaSalaInicial = false;
-      gameOverMostrado = false;
-      mostradasSalas = {
-        infantil: false,
-        computadores: false,
-        general: false,
-        exposiciones: false,
-        adicional: false
-      };
-      ocultarTodosBotones();
-      video.currentTime = 30;
-      video.play();
-    };
+    function reiniciar(){
+      gameOverDiv.style.display = 'none';
+      salioBiblioteca = false;
+      preguntasHechas.clear();
+      player.seekTo(28, true);
+      player.playVideo();
+    }
 
-    // Entradas iniciales
-    btnStartInfantil.onclick = () => {
-      ocultarTodosBotones();
-      visitadas.add('infantil');
-      video.currentTime = tiemposPreguntas.infantil + 1;
-      video.play();
-    };
-    btnStartComputadores.onclick = () => {
-      ocultarTodosBotones();
-      visitadas.add('computadores');
-      video.currentTime = tiemposPreguntas.computadores + 1;
-      video.play();
-    };
-    btnStartGeneral.onclick = () => {
-      ocultarTodosBotones();
-      visitadas.add('general');
-      video.currentTime = tiemposPreguntas.general + 1;
-      video.play();
-    };
-    btnStartExposiciones.onclick = () => {
-      ocultarTodosBotones();
-      visitadas.add('exposiciones');
-      video.currentTime = tiemposPreguntas.exposiciones + 1;
-      video.play();
-    };
-
-    // Opciones dentro del recorrido
-    btnInfantil.onclick = () => {
-      ocultarTodosBotones();
-      video.currentTime = tiemposPreguntas.infantil + 1;
-      video.play();
-    };
-    btnComputadores.onclick = () => {
-      ocultarTodosBotones();
-      video.currentTime = tiemposPreguntas.computadores + 1;
-      video.play();
-    };
-    btnGeneral.onclick = () => {
-      ocultarTodosBotones();
-      video.currentTime = tiemposPreguntas.general + 1;
-      video.play();
-    };
-    btnExposiciones.onclick = () => {
-      ocultarTodosBotones();
-      video.currentTime = tiemposPreguntas.exposiciones + 1;
-      video.play();
-    };
-
-    btnSalir.onclick = () => {
-      ocultarTodosBotones();
-      
-      video.currentTime = 375;
-      video.play();
-    };
+    function capitalize(str){
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
   </script>
+
 </body>
 </html>
